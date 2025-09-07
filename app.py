@@ -1,35 +1,43 @@
-import  pickle
-from flask import Flask,request,app,jsonify,url_for,render_template
+import os
+import pickle
+from flask import Flask, request, jsonify, render_template
 import numpy as np
-import pandas as pd
+
+# Initialize Flask app
 app = Flask(__name__)
-model = pickle.load(open("reg_model.pkl","rb"))
-scaler = pickle.load(open("scaler.pkl","rb"))
+
+# Load trained model and scaler
+model = pickle.load(open("reg_model.pkl", "rb"))
+scaler = pickle.load(open("scaler.pkl", "rb"))
+
+# Route for home page
 @app.route('/')
 def home():
     return render_template('home.html')
-@app.route('/predict_api',methods = ['POST'])
+
+# Route for JSON API prediction (for Postman or frontend AJAX)
+@app.route('/predict_api', methods=['POST'])
 def predict_api():
-    data = request.json['data']
-    print(data)
-    print(np.array(list(data.values())).reshape(1,-1))
-    new_data=scaler.transform(np.array(list(data.values())).reshape(1,-1))
+    data = request.json['data']  # Expecting JSON: {"data": {"feature1": val, ...}}
+    # Convert input to proper shape and scale
+    new_data = scaler.transform(np.array(list(data.values())).reshape(1, -1))
+    # Make prediction
     output = model.predict(new_data)
-    print(output[0])
-    return jsonify(output[0])
-@app.route('/predict',methods=['POST'])
+    # Return result as JSON
+    return jsonify({"prediction": float(output[0])})
+
+# Route for HTML form prediction
+@app.route('/predict', methods=['POST'])
 def predict():
+    # Get input from form
     data = [float(x) for x in request.form.values()]
-    final_input = scaler.transform(np.array(data).reshape(1,-1))
-    print(final_input)
+    # Scale input
+    final_input = scaler.transform(np.array(data).reshape(1, -1))
+    # Make prediction
     output = model.predict(final_input)[0]
-    return render_template("home.html",prediction_text="The predicted price for the house is {}".format(output))
+    # Render home page with prediction text
+    return render_template("home.html", prediction_text=f"The predicted price for the house is {output:.2f}")
 
-if __name__=="__main__":
-    app.run(debug=True)
-
-
-
-
-
-
+# Run app
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)), debug=True)
