@@ -11,6 +11,8 @@ Create a new environment
 ```
 conda create -p venv python==3.10 -y
 ```
+![Render Deploy](https://github.com/Muhammad-Zubair796/bostonhousespricing/actions/workflows/main.yaml/badge.svg)
 
+An end-to-end machine learning project for predicting Boston house prices.
 
 
